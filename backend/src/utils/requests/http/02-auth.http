@@ -1,4 +1,4 @@
-@baseUrl = http://localhost:4000/api/v2/auth/
+@baseUrl = http://localhost:4000/api/v1/auth/
 @token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7InJvbGVfaWQiOjEsInVzZXJfaWQiOjF9LCJpYXQiOjE3NDM4OTQ2OTUsImV4cCI6MTc0Mzg5ODI5NX0.Ci_WfXLjeyVYS_FBV4pfBooXA3BmiyEDBKqErAUToNg
 
 POST {{baseUrl}}/register HTTP/1.1

@@ -1,5 +1,5 @@
-@loginUrl = http://localhost:4000/api/v2/auth/login
-@usersUrl= http://localhost:4000/api/v2/users
+@loginUrl = http://localhost:4000/api/v1/auth/login
+@usersUrl= http://localhost:4000/api/v1/users
 @token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7InJvbGVfaWQiOjEsInVzZXJfaWQiOjF9LCJpYXQiOjE3NDIxMzA4NzksImV4cCI6MTc0MjEzNDQ3OX0.cm9CMGB1st9DooCLX9HseKGo1Lxk3PRP8qIZD-DmE9A
 
 POST {{loginUrl}} HTTP/1.1

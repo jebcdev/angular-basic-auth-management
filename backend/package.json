@@ -1,5 +1,5 @@
 {
-    "name": "basic-auth-management-ts-v2",
+    "name": "basic-auth-management-ts",
     "version": "0.0.1",
     "description": "Parce, esta es una estructura inicial, básica con la configuración de TypeScript,JWT, Express, Bcryptjs, Morgan, Cors y Dotenv.",
     "main": "./dist/app.js",

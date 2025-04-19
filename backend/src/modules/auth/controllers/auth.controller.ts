@@ -94,7 +94,7 @@ export class AuthController {
                     id: data.role.id,
                     name: data.role.name,
                 },
-                createdAt: data.created_at,
+                created_at: data.created_at,
                 token,
             });
         } catch (error) {
@@ -127,13 +127,19 @@ export class AuthController {
             if (!id) return res.status(401).json("Unauthorized");
 
             // Obtiene los datos del usuario por su ID.
-            const data = await this.service.getById(id);
+            let data = await this.service.getById(id);
 
             // Si el usuario no existe, devuelve un error de autorización.
             if (!data) return res.status(401).json("Unauthorized");
 
+
+            const resData = {
+                ...data, // Copiamos todos los datos del usuario
+                token: token, // Añadimos el token al mismo nivel
+                role: data.role // Mantenemos el objeto role completo
+            };
             // Devuelve la información del perfil del usuario.
-            return res.status(200).json(data);
+            return res.status(200).json(resData);
         } catch (error) {
             // Maneja cualquier error inesperado y devuelve un mensaje de error genérico.
             return res.status(500).json({
@@ -197,6 +203,11 @@ export class AuthController {
 
             data = await this.service.getByEmail(data.email);
 
+            const token = await this.service.login(
+                data?.role.id!,
+                data?.id!
+            );
+
             // Si el usuario fue creado correctamente, devuelve los datos del usuario registrado.
             return res.status(201).json({
                 id: data?.id,
@@ -207,7 +218,8 @@ export class AuthController {
                         id: data?.role.id,
                         name: data?.role.name,
                     },
-                    createdAt: data?.created_at,
+                    created_at: data?.created_at,
+                    token,
             });
         } catch (error) {
             console.log(error);
@@ -224,45 +236,38 @@ export class AuthController {
         res: Response
     ):Promise<Response>{
         try {
+            // Obtiene el token de autorización de los encabezados de la solicitud.
             const token: string = req.headers.authorization?.split(
                 " "
             )[1] as string;
 
-             // If no token provided, return unauthorized
-        if (!token) 
-            return res.status(401).json({
-                valid: false,
-                message: "No token provided"
-            });
+            // Verifica la validez del token.
+            const decoded = await JwtUtil.verifyToken(token);
 
-            // Verify the token using JwtUtil
-        const decoded = await JwtUtil.verifyToken(token);
+            // Extrae el ID del usuario del token decodificado.
+            const id: number = Number(decoded?.data?.user_id);
 
-         // If token is invalid, decoded will be null or undefined
-         if (!decoded) 
-            return res.status(401).json({
-                valid: false,
-                message: "Invalid token"
-            });
- // Extract user ID and role ID from the decoded token
- const user_id: number = Number(decoded?.data?.user_id);
- const role_id: number = Number(decoded?.data?.role_id);
+            // Si no se obtiene un ID válido, devuelve un error de autorización.
+            if (!id) return res.status(401).json("Unauthorized");
 
-  // Return success with token information
-  return res.status(200).json({
-    valid: true,
-    message: "Token is valid",
-    data: {
-        user_id,
-        role_id,
-        expires: decoded.exp
-    }
-});
+            // Obtiene los datos del usuario por su ID.
+            const data = await this.service.getById(id);
+
+            // Si el usuario no existe, devuelve un error de autorización.
+            if (!data) return res.status(401).json("Unauthorized");
+
+            const resData = {
+                ...data, // Copiamos todos los datos del usuario
+                token: token, // Añadimos el token al mismo nivel
+                role: data.role // Mantenemos el objeto role completo
+            };
+            // Devuelve la información del perfil del usuario.
+            return res.status(200).json(resData);
         } catch (error) {
-            console.error("Error checking token:", error);
+            // Maneja cualquier error inesperado y devuelve un mensaje de error genérico.
             return res.status(401).json({
-                valid: false,
-                message: "Invalid token"
+                message: "Unauthorized",
+                data: error,
             });
         }
     }
