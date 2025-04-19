@@ -23,6 +23,7 @@ import { JwtUtil } from "../../../utils/jwt.util";
 
 // Importa la entidad de usuario para interactuar con la base de datos.
 import { UserEntity } from "../../user/entities/user.entity";
+import { UpdateUserDto } from "../dtos/update-user.dto";
 
 // Define la clase AuthController para manejar la autenticación de usuarios.
 export class AuthController {
@@ -132,11 +133,10 @@ export class AuthController {
             // Si el usuario no existe, devuelve un error de autorización.
             if (!data) return res.status(401).json("Unauthorized");
 
-
             const resData = {
                 ...data, // Copiamos todos los datos del usuario
                 token: token, // Añadimos el token al mismo nivel
-                role: data.role // Mantenemos el objeto role completo
+                role: data.role, // Mantenemos el objeto role completo
             };
             // Devuelve la información del perfil del usuario.
             return res.status(200).json(resData);
@@ -211,15 +211,15 @@ export class AuthController {
             // Si el usuario fue creado correctamente, devuelve los datos del usuario registrado.
             return res.status(201).json({
                 id: data?.id,
-                    name: data?.name,
-                    surname: data?.surname,
-                    email: data?.email,
-                    role: {
-                        id: data?.role.id,
-                        name: data?.role.name,
-                    },
-                    created_at: data?.created_at,
-                    token,
+                name: data?.name,
+                surname: data?.surname,
+                email: data?.email,
+                role: {
+                    id: data?.role.id,
+                    name: data?.role.name,
+                },
+                created_at: data?.created_at,
+                token,
             });
         } catch (error) {
             console.log(error);
@@ -234,7 +234,7 @@ export class AuthController {
     public async checkToken(
         req: Request,
         res: Response
-    ):Promise<Response>{
+    ): Promise<Response> {
         try {
             // Obtiene el token de autorización de los encabezados de la solicitud.
             const token: string = req.headers.authorization?.split(
@@ -259,13 +259,113 @@ export class AuthController {
             const resData = {
                 ...data, // Copiamos todos los datos del usuario
                 token: token, // Añadimos el token al mismo nivel
-                role: data.role // Mantenemos el objeto role completo
+                role: data.role, // Mantenemos el objeto role completo
             };
             // Devuelve la información del perfil del usuario.
             return res.status(200).json(resData);
         } catch (error) {
             // Maneja cualquier error inesperado y devuelve un mensaje de error genérico.
             return res.status(401).json({
+                message: "Unauthorized",
+                data: error,
+            });
+        }
+    }
+
+    public async updateById(
+        req: Request,
+        res: Response
+    ): Promise<Response> {
+        try {
+            let token: string = req.headers.authorization?.split(
+                " "
+            )[1] as string;
+
+            const decoded = await JwtUtil.verifyToken(token);
+
+            const id: number = Number(decoded?.data?.user_id);
+
+            if (!id) return res.status(401).json("Unauthorized");
+
+            let data = await this.service.getById(id);
+
+            if (!data) return res.status(401).json("Unauthorized");
+
+            const dto: UpdateUserDto = plainToInstance(
+                UpdateUserDto,
+                req.body
+            );
+
+            const errors: ValidationError[] = await validate(dto);
+
+            // Si hay errores de validación, devuelve una respuesta con el mensaje de error.
+            if (errors.length > 0) {
+                return res.status(400).json({
+                    message:
+                        "Validation Error | AuthController Update",
+                    errors: errors.map((err) => ({
+                        property: err.property,
+                        constraints: err.constraints,
+                    })),
+                });
+            }
+
+            // Verifica si el usuario ya existe en la base de datos por su correo electrónico.
+            const exists: UserEntity | null =
+                await this.service.getByEmail(dto.email);
+
+            // Si el usuario ya existe, devuelve un mensaje de error.
+            if (exists && exists.email !== dto.email) {
+                return res
+                    .status(400)
+                    .json(`User Already Exists: ${exists.name}`);
+            }
+
+            if (dto.password)
+                dto.password = await BcryptUtil.hashPassword(
+                    dto.password
+                );
+
+            await this.service.updateById(
+                id,
+                plainToInstance(UserEntity, dto)
+            );
+
+            const updatedData: UpdateResult | null =
+                await this.service.updateById(
+                    id,
+                    plainToInstance(UserEntity, dto)
+                );
+
+            // Si hubo un error al actualizar, devuelve un mensaje de error.
+            if (!updatedData)
+                return res.status(500).json("Error Updating User");
+
+            // Llama al servicio para obtener el usuario actualizado por su ID.
+            data = await this.service.getById(id);
+
+            if (!data) return res.status(401).json("Unauthorized");
+
+            token = await this.service.login(
+                data?.role.id!,
+                data?.id!
+            );
+
+            // Si la actualización fue exitosa, devuelve el usuario actualizado con un mensaje de éxito.
+            return res.status(201).json({
+                id: data?.id,
+                name: data?.name,
+                surname: data?.surname,
+                email: data?.email,
+                role: {
+                    id: data?.role.id,
+                    name: data?.role.name,
+                },
+                created_at: data?.created_at,
+                token,
+            });
+        } catch (error) {
+            return res.status(500).json({
                 message: "Unauthorized",
                 data: error,
             });

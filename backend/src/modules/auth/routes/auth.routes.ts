@@ -28,7 +28,7 @@ export class AuthRoutes {
     // Método para definir todas las rutas del módulo de autenticación.
     public initializeRoutes(): void {
         // Desestructuración para obtener los métodos del controlador de autenticación.
-        const { register, login, profile,checkToken } = this.controller;
+        const { register, login, profile,updateById, checkToken } = this.controller;
 
         // Define la ruta para registrar un nuevo usuario.
         // Se utiliza el método POST porque se está enviando información para crear un recurso (usuario).
@@ -42,6 +42,7 @@ export class AuthRoutes {
         // Se aplica el middleware `TokenExistsMiddleware.check` para verificar que el token de autenticación esté presente.
         // Luego, si el token es válido, se ejecuta el método `profile` del controlador.
         this.router.post("/profile", TokenExistsMiddleware.check, profile.bind(this.controller));
+        this.router.post("/update-profile", TokenExistsMiddleware.check, updateById.bind(this.controller));
         this.router.post("/check-token", TokenExistsMiddleware.check, checkToken.bind(this.controller));
     }
 }

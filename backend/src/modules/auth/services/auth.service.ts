@@ -1,5 +1,5 @@
 // Importación de la clase Repository de TypeORM, que proporciona métodos para interactuar con la base de datos.
-import { Repository } from "typeorm";
+import { Repository, UpdateResult } from "typeorm";
 
 // Importación de la interfaz IAuthRepository, que define el contrato para la lógica del repositorio de autenticación.
 import { IAuthRepository } from "../repositories/iauth.repository";
@@ -80,4 +80,9 @@ export class AuthService implements IAuthRepository {
     ): Promise<UserEntity | null> {
         return await this.repository.save(user); // Guarda el nuevo usuario y lo devuelve.
     }
+
+      // Actualiza un usuario por su ID y devuelve el resultado de la actualización.
+        public async updateById(id: number, data: UserEntity): Promise<UpdateResult | null> {
+            return await this.repository.update(id, data);
+        }
 }

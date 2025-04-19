@@ -61,6 +61,19 @@ export class AuthService {
       );
   }
 
+  updateProfile(data: iUser): Observable<boolean> {
+    return this._http
+      .post<iUser>(`${AUTH_API_URL}/update-profile`, data)
+
+      .pipe(
+        map((res) => this.handleAuthSuccess(res)),
+        
+        catchError((error: any) =>this.handleAuthError(error))
+      );
+  }
+
+
+
   checkAuthStatus(): Observable<boolean> {
     const token: string | null = localStorage.getItem('token');
     

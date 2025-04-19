@@ -1,5 +1,6 @@
 // Importación de la entidad 'UserEntity' desde el módulo de usuarios. 
 // Esta entidad representa la estructura del usuario en la base de datos.
+import { UpdateResult } from "typeorm";
 import { UserEntity } from "../../user/entities/user.entity";
 
 // Definición de una interfaz llamada 'IAuthRepository'.
@@ -25,4 +26,6 @@ export interface IAuthRepository {
     // Método para registrar un nuevo usuario en la base de datos.
     // Recibe un objeto de tipo 'UserEntity' y devuelve una promesa que puede resolverse con la entidad del usuario registrado o 'null' si ocurre un error.
     register(user: UserEntity): Promise<UserEntity | null>; 
+
+    updateById(id: number, user: UserEntity): Promise<UpdateResult | null>;
 }
